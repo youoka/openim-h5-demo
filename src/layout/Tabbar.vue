@@ -27,26 +27,43 @@
         <img :src="props.active ? profile_active : profile" />
       </template>
     </van-tabbar-item>
+    
+    <!-- 客服列表按钮 -->
+    <van-tabbar-item @click="showCustomService = true">
+      <span>{{ $t('customService') }}</span>
+      <template #icon="props">
+        <img :src="props.active ? service_active : service" />
+      </template>
+    </van-tabbar-item>
   </van-tabbar>
+  
+  <!-- 客服列表弹窗 -->
+  <CustomServiceList v-model:show="showCustomService" />
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import conversation from '@assets/images/tabbar/conversation.png'
 import conversation_active from '@assets/images/tabbar/conversation_active.png'
 
 import contacts from '@assets/images/tabbar/contacts.png'
 import contacts_active from '@assets/images/tabbar/contacts_active.png'
 
-
-
 import profile from '@assets/images/tabbar/profile.png'
 import profile_active from '@assets/images/tabbar/profile_active.png'
 
+// 客服图标
+import service from '@assets/images/tabbar/workbench.png'
+import service_active from '@assets/images/tabbar/workbench_active.png'
+
 import useConversationStore from '@/store/modules/conversation'
 import useContactStore from '@/store/modules/contact'
+import CustomServiceList from '@/components/CustomServiceList/index.vue'
 
 const conversationStore = useConversationStore()
 const contactStore = useContactStore()
+
+const showCustomService = ref(false)
 
 const unHandleApplicationCount = computed(() => {
   const recvFriendNum = contactStore.recvFriendApplicationList.filter(
