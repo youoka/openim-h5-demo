@@ -152,7 +152,7 @@ const fetchCustomServiceUsers = async () => {
       customServiceUsers.value = []
     }
     
-    feedbackToast({ error, msg: '获取客服列表失败' })
+    feedbackToast({ error, message: '获取客服列表失败' })
   } finally {
     loading.value = false
   }
@@ -176,7 +176,7 @@ const handleUserClick = async (userID: string) => {
     router.push(`/chat?conversationID=${conversation.conversationID}`)
   } catch (error) {
     console.error('获取会话失败:', error)
-    feedbackToast({ error, msg: '获取会话失败' })
+    feedbackToast({ error, message: '获取会话失败' })
   }
 }
 
