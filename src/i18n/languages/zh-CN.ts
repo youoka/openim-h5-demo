@@ -54,7 +54,7 @@ export const lang = {
   unread: '未读',
   someUnread: '{count}人未读',
   createGroup: '创建群聊',
-  createGroupDesc: '创建群聊，全面使用OpenIM',
+  createGroupDesc: '创建群聊，全面提升效率',
   joinGroup: '加入群聊',
   joinGroupDesc: '向管理员或团队成员询问ID',
   createNow: '立即创建',
