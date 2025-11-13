@@ -128,6 +128,38 @@ const showAreaCode = ref(false)
 const count = ref(0)
 let timer: NodeJS.Timer
 
+// 添加自动登录逻辑，在组件挂载时执行
+onMounted(() => {
+  // 检查URL参数中的自动登录信息
+  // 首先检查标准查询参数（非hash路由）
+  const urlParams = new URLSearchParams(window.location.search);
+  let IM_CHAT_TOKEN = urlParams.get("chatToken");
+  let IM_TOKEN = urlParams.get("imToken");
+  let IM_USERID = urlParams.get("uid");
+
+  // 如果标准查询参数中没有找到，则检查hash路由参数
+  if (!IM_CHAT_TOKEN || !IM_TOKEN || !IM_USERID) {
+    const hash = window.location.hash
+    if (hash.includes('?')) {
+      const hashSearchParams = new URLSearchParams(hash.split('?')[1])
+      IM_CHAT_TOKEN = hashSearchParams.get("chatToken")
+      IM_TOKEN = hashSearchParams.get("imToken")
+      IM_USERID = hashSearchParams.get("uid")
+    }
+  }
+
+  // 如果找到了所有必需的参数，则自动登录
+  if (IM_CHAT_TOKEN && IM_TOKEN && IM_USERID) {
+    console.log(IM_CHAT_TOKEN, IM_TOKEN, IM_USERID)
+    setIMProfile({
+      chatToken: IM_CHAT_TOKEN,
+      imToken: IM_TOKEN,
+      userID: IM_USERID,
+    })
+    router.push('/conversation')
+  }
+})
+
 const onSubmit = async () => {
   loading.value = true
   localStorage.setItem('IMAccount', formData.phoneNumber)
