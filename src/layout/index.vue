@@ -85,6 +85,11 @@ const tryLogin = async () => {
     })
     initStore()
   } catch (error) {
+    console.error('登录失败:', error)
+    feedbackToast({ 
+      message: '自动登录失败，请重新登录', 
+      error: error as Error 
+    })
     router.push('/login')
   }
 }

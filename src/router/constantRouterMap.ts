@@ -11,6 +11,10 @@ import contactRouters from './modules/contact'
 import profileRouters from './modules/profile'
 import loginRouters from './modules/login'
 import { getIMToken, getIMUserID } from '@/utils/storage'
+import { feedbackToast } from '@/utils/common'
+import { i18n } from '@/i18n'
+
+const { t } = i18n.global
 
 const loginCheck = async (
     to: RouteLocationNormalized,
@@ -31,7 +35,13 @@ const loginCheck = async (
             next('conversation')
             return
         }
-        next()
+        // 添加错误提示
+        console.error('登录状态检查失败:', error)
+        feedbackToast({ 
+          message: t('messageTip.loginExpiration'), 
+          error: new Error('登录已过期，请重新登录') 
+        })
+        next('login')
     }
 }
 

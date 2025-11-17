@@ -156,7 +156,15 @@ onMounted(() => {
       imToken: IM_TOKEN,
       userID: IM_USERID,
     })
-    router.push('/conversation')
+    
+    // 添加自动登录错误处理
+    router.push('/conversation').catch((error) => {
+      console.error('自动登录跳转失败:', error)
+      feedbackToast({ 
+        message: t('messageTip.loginFailed'), 
+        error: new Error('自动登录失败，请手动登录') 
+      })
+    })
   }
 })
 
@@ -177,7 +185,7 @@ const onSubmit = async () => {
     setIMProfile({ chatToken, imToken, userID })
     router.push('/conversation')
   } catch (error) {
-    // feedbackToast({ message: t('messageTip.loginFailed'), error })
+    feedbackToast({ message: t('messageTip.loginFailed'), error })
   }
   loading.value = false
 }
