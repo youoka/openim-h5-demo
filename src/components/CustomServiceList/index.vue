@@ -37,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { IMSDK } from '@/utils/imCommon'
 import { feedbackToast } from '@/utils/common'
@@ -45,7 +45,7 @@ import useConversationStore from '@/store/modules/conversation'
 import useUserStore from '@/store/modules/user'
 import Avatar from '@/components/Avatar/index.vue'
 import { SessionType } from '@openim/wasm-client-sdk'
-import { searchUserInfoByBusiness } from '@/api/user'
+import { searchUserInfoByBusiness, getBusinessInfo } from '@/api/user'
 
 // 固定的客服用户ID列表，使用有效的用户ID
 const CUSTOM_SERVICE_USER_IDS = [
@@ -73,6 +73,13 @@ const customServiceUsers = ref<any[]>([])
 const visible = computed({
   get: () => props.show,
   set: (value) => emit('update:show', value)
+})
+
+// 监听show属性变化，当弹窗打开时才加载数据
+watch(() => props.show, (newVal) => {
+  if (newVal) {
+    fetchCustomServiceUsers()
+  }
 })
 
 // 关闭弹窗的方法
@@ -109,6 +116,27 @@ const fetchCustomServiceUsers = async () => {
             ...businessData,
           }
           users.push(userInfo)
+        } else {
+          // 如果搜索不到，尝试直接通过IM SDK获取
+          const { data } = await IMSDK.getUsersInfo([userId])
+          if (data && data.length > 0) {
+            // 同时获取业务信息
+            try {
+              const businessRes = await getBusinessInfo(userId)
+              if (businessRes.data.users && businessRes.data.users.length > 0) {
+                const userInfo = {
+                  ...data[0],
+                  ...businessRes.data.users[0]
+                }
+                users.push(userInfo)
+              } else {
+                users.push(data[0])
+              }
+            } catch (businessError) {
+              console.warn(`获取用户 ${userId} 业务信息失败:`, businessError)
+              users.push(data[0])
+            }
+          }
         }
       } catch (err) {
         console.warn(`获取用户 ${userId} 信息失败:`, err)
@@ -180,9 +208,7 @@ const handleUserClick = async (userID: string) => {
   }
 }
 
-onMounted(() => {
-  fetchCustomServiceUsers()
-})
+// 移除了 onMounted 钩子，改为通过监听 show 属性触发加载
 
 defineExpose({
   fetchCustomServiceUsers
