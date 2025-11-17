@@ -130,41 +130,68 @@ let timer: NodeJS.Timer
 
 // 添加自动登录逻辑，在组件挂载时执行
 onMounted(() => {
+  console.log('检查自动登录参数...');
+  
+  console.log('window.location:', window.location);
+  console.log('window.location.search:', window.location.search);
+  console.log('window.location.hash:', window.location.hash);
+  
   // 检查URL参数中的自动登录信息
   // 首先检查标准查询参数（非hash路由）
-  const urlParams = new URLSearchParams(window.location.search);
+  // 处理URL中的转义字符
+  let search = window.location.search;
+  if (search.includes('\\u0026')) {
+    // 处理双重转义的情况
+    search = search.replace(/\\u0026/g, '&');
+  } else if (search.includes('\u0026')) {
+    // 处理单重转义的情况
+    search = search.replace(/\u0026/g, '&');
+  }
+  
+  const urlParams = new URLSearchParams(search);
   let IM_CHAT_TOKEN = urlParams.get("chatToken");
   let IM_TOKEN = urlParams.get("imToken");
   let IM_USERID = urlParams.get("uid");
+  
+  console.log('查询参数解析结果:', {IM_CHAT_TOKEN, IM_TOKEN, IM_USERID});
 
   // 如果标准查询参数中没有找到，则检查hash路由参数
-  if (!IM_CHAT_TOKEN || !IM_TOKEN || !IM_USERID) {
-    const hash = window.location.hash
-    if (hash.includes('?')) {
-      const hashSearchParams = new URLSearchParams(hash.split('?')[1])
-      IM_CHAT_TOKEN = hashSearchParams.get("chatToken")
-      IM_TOKEN = hashSearchParams.get("imToken")
-      IM_USERID = hashSearchParams.get("uid")
+  if ((!IM_CHAT_TOKEN || !IM_TOKEN || !IM_USERID) && window.location.hash.includes('?')) {
+    let hash = window.location.hash.split('?')[1];
+    if (hash) {
+      if (hash.includes('\\u0026')) {
+        // 处理双重转义的情况
+        hash = hash.replace(/\\u0026/g, '&');
+      } else if (hash.includes('\u0026')) {
+        // 处理单重转义的情况
+        hash = hash.replace(/\u0026/g, '&');
+      }
+      
+      const hashParams = new URLSearchParams(hash);
+      IM_CHAT_TOKEN = hashParams.get("chatToken") || IM_CHAT_TOKEN;
+      IM_TOKEN = hashParams.get("imToken") || IM_TOKEN;
+      IM_USERID = hashParams.get("uid") || IM_USERID;
+      console.log('Hash参数解析结果:', {IM_CHAT_TOKEN, IM_TOKEN, IM_USERID});
     }
   }
 
   // 如果找到了所有必需的参数，则自动登录
   if (IM_CHAT_TOKEN && IM_TOKEN && IM_USERID) {
-    console.log(IM_CHAT_TOKEN, IM_TOKEN, IM_USERID)
-    setIMProfile({
-      chatToken: IM_CHAT_TOKEN,
-      imToken: IM_TOKEN,
-      userID: IM_USERID,
-    })
+    console.log('自动登录参数:', {IM_CHAT_TOKEN, IM_TOKEN, IM_USERID});
+    setIMProfile({ chatToken: IM_CHAT_TOKEN, imToken: IM_TOKEN, userID: IM_USERID });
     
-    // 添加自动登录错误处理
-    router.push('/conversation').catch((error) => {
-      console.error('自动登录跳转失败:', error)
-      feedbackToast({ 
-        message: t('messageTip.loginFailed'), 
-        error: new Error('自动登录失败，请手动登录') 
-      })
-    })
+    // 使用nextTick确保DOM更新后再进行跳转
+    nextTick(() => {
+      router.push('/conversation').catch((error) => {
+        console.error('自动登录跳转失败:', error);
+        feedbackToast({ 
+          message: t('messageTip.loginFailed'), 
+          error: new Error('自动登录失败，请手动登录') 
+        });
+      });
+    });
+  } else {
+    console.log('缺少必要的自动登录参数');
   }
 })
 
